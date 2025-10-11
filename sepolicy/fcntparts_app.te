@@ -1,0 +1,38 @@
+type fcntparts_app, domain;
+typeattribute fcntparts_app mlstrustedsubject;
+
+app_domain(fcntparts_app)
+
+allow fcntparts_app {
+  activity_service
+  activity_task_service
+  audio_service
+  autofill_service
+  cameraserver_service
+  content_capture_service
+  device_state_service
+  game_service
+  gpu_service
+  hint_service
+  media_session_service
+  netstats_service
+  permission_checker_service
+  sensorservice_service
+  statusbar_service
+  surfaceflinger_service
+  thermal_service
+  trust_service
+  voiceinteraction_service
+}:service_manager find;
+
+allow fcntparts_app system_app_data_file:dir create_dir_perms;
+allow fcntparts_app system_app_data_file:{ file lnk_file } create_file_perms;
+allow fcntparts_app system_data_file:dir search;
+
+allow fcntparts_app {
+  sysfs_leds
+}:file rw_file_perms;
+
+allow fcntparts_app {
+  sysfs_leds
+}:dir r_dir_perms;

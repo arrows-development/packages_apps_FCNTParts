@@ -4,8 +4,8 @@
 //
 
 prebuilt_etc {
-    name: "init.pixelparts.rc",
-    src: "init.pixelparts.rc",
+    name: "init.fcntparts.rc",
+    src: "init.fcntparts.rc",
     sub_dir: "init",
     vendor: true,
 }

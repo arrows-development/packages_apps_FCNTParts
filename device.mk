@@ -4,13 +4,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-# PixelParts app
+# FCNTParts app
 PRODUCT_PACKAGES += \
-    PixelParts
+    FCNTParts
 
-# PixelParts init rc
+# FCNTParts init rc
 PRODUCT_PACKAGES += \
-    init.pixelparts.rc
+    init.fcntparts.rc
 
-# PixelParts sepolicy
-BOARD_SEPOLICY_DIRS += packages/apps/PixelParts/sepolicy
+# FCNTParts sepolicy
+BOARD_SEPOLICY_DIRS += packages/apps/FCNTParts/sepolicy
