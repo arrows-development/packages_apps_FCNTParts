@@ -24,4 +24,13 @@ android_app {
     optimize: {
         proguard_flags_files: ["proguard.flags"],
     },
+
+    required: ["privapp-permissions-fcntparts.xml"],
+}
+
+prebuilt_etc {
+    name: "privapp-permissions-fcntparts.xml",
+    src: "privapp-permissions-fcntparts.xml",
+    sub_dir: "permissions",
+    system_ext_specific: true,
 }

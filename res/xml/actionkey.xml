@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:settings="http://schemas.android.com/apk/res-auto"
+    android:title="@string/actionkey_title">
+
+    <com.android.settingslib.widget.TopIntroPreference
+        android:key="actionkey_intro"
+        android:title="@string/actionkey_summary" />
+
+    <ListPreference
+        android:key="actionkey_perform_type_short"
+        android:title="@string/actionkey_perform_type_short_title"
+        android:dialogTitle="@string/actionkey_perform_type_short_title"
+        android:entries="@array/actionkey_perform_entries"
+        android:entryValues="@array/actionkey_perform_values"
+        android:defaultValue="0"
+        settings:useSimpleSummaryProvider="true" />
+
+    <ListPreference
+        android:key="actionkey_perform_type_long"
+        android:title="@string/actionkey_perform_type_long_title"
+        android:dialogTitle="@string/actionkey_perform_type_long_title"
+        android:entries="@array/actionkey_perform_entries"
+        android:entryValues="@array/actionkey_perform_values"
+        android:defaultValue="1"
+        settings:useSimpleSummaryProvider="true" />
+
+    <jp.project2by2.fcntparts.CustomSeekBarPreference
+        android:key="actionkey_hold_duration"
+        android:title="@string/actionkey_hold_duration_title"
+        android:max="750"
+        android:min="200"
+        android:defaultValue="750"
+        settings:continuousUpdates="true" />
+</PreferenceScreen>

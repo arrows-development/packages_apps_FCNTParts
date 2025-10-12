@@ -7,4 +7,11 @@ package jp.project2by2.fcntparts;
 
 public class Constants {
 
+    // Action key
+    public static final String KEY_ACTIONKEY_PERFORM_TYPE_SHORT = "actionkey_perform_type_short";
+    public static final String KEY_ACTIONKEY_PERFORM_TYPE_SHORT_APP_PACKAGE_NAME = "actionkey_perform_type_short_app_package_name";
+    public static final String KEY_ACTIONKEY_PERFORM_TYPE_LONG = "actionkey_perform_type_long";
+    public static final String KEY_ACTIONKEY_PERFORM_TYPE_LONG_APP_PACKAGE_NAME = "actionkey_perform_type_long_app_package_name";
+    public static final String KEY_ACTIONKEY_HOLD_DURATION = "actionkey_hold_duration";
+
 }

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2025 The 2by2 Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- Action Key - Supported actions -->
+    <string-array name="actionkey_perform_entries">
+        <item>@string/actionkey_perform_no_action_title</item>
+        <item>@string/actionkey_perform_assistant_title</item>
+        <item>@string/actionkey_perform_lens_title</item>
+        <!--<item>@string/actionkey_perform_launch_app_title</item>-->
+    </string-array>
+
+    <string-array name="actionkey_perform_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <!--<item>4</item>-->
+    </string-array>
+</resources>

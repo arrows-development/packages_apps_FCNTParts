@@ -18,6 +18,19 @@
     <string name="tile_off">Off</string>
     <string name="tile_camera_in_use">Camera in use</string>
 
+    <!-- Action Key -->
+    <string name="actionkey_title">Action key</string>
+    <string name="actionkey_summary">Configure device action key behavior</string>
+    <string name="actionkey_perform_type_short_title">Short press</string>
+    <string name="actionkey_perform_type_long_title">Long press</string>
+    <string name="actionkey_hold_duration_title">Long press hold duration (ms)</string>
+
+    <!-- Action Key - Supported actions -->
+    <string name="actionkey_perform_no_action_title">No action</string>
+    <string name="actionkey_perform_assistant_title">Digital Assistant</string>
+    <string name="actionkey_perform_lens_title">Lens</string>
+    <string name="actionkey_perform_launch_app_title">Launch app</string>
+
     <!-- Custom seekbar -->
     <string name="custom_seekbar_value">Value: <xliff:g id="v">%s</xliff:g></string>
     <string name="custom_seekbar_default_value">by default</string>
