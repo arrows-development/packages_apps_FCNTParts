@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/exlider_summary"
+    android:accessibilityEventTypes="typeViewClicked|typeWindowsChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault|flagReportViewIds"
+    android:canRetrieveWindowContent="true"
+    android:canRequestFilterKeyEvents="true"
+    android:canControlMagnification="true"
+    android:canPerformGestures="true"
+    android:settingsActivity="jp.project2by2.fcntparts.exlider.ExliderActivity" />

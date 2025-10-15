@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:settings="http://schemas.android.com/apk/res-auto">
+
+    <com.android.settingslib.widget.TopIntroPreference
+        android:key="exlider_intro"
+        android:title="@string/exlider_summary" />
+
+    <com.android.settingslib.widget.MainSwitchPreference
+        android:key="exlider"
+        android:title="@string/exlider_main_switch_title"
+        android:defaultValue="false" />
+
+</PreferenceScreen>

@@ -11,6 +11,7 @@
           android:versionCode="2"
           android:versionName="2.0" >
 
+    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -62,5 +63,36 @@
                 android:name="com.android.settings.summary"
                 android:resource="@string/actionkey_summary" />
         </activity>
+
+        <!-- Exlider activity -->
+        <activity
+            android:name=".exlider.ExliderActivity"
+            android:label="@string/exlider_title"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.android.settings.action.IA_SETTINGS" />
+            </intent-filter>
+            <meta-data
+                android:name="com.android.settings.category"
+                android:value="com.android.settings.category.ia.gestures" />
+            <meta-data
+                android:name="com.android.settings.summary"
+                android:resource="@string/exlider_summary" />
+        </activity>
+
+        <!-- Exlider service -->
+        <service
+            android:name=".exlider.ExliderService"
+            android:label="@string/exlider_title"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:settingsActivity="jp.project2by2.fcntparts.exlider.ExliderActivity">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/exlider_accessibility_config" />
+        </service>
     </application>
 </manifest>

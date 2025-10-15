@@ -78,6 +78,25 @@ public class KeyHandler implements DeviceKeyHandler {
 
     @Override
     public KeyEvent handleKeyEvent(KeyEvent event) {
+        int keyCode = event.getKeyCode();
+        if (keyCode == KeyEvent.KEYCODE_BUTTON_THUMBL) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                Intent intent = new Intent(Constants.EXLIDER_ACTION_FINGER_EVENT);
+                intent.putExtra(Constants.EXLIDER_ACTION_FINGER_STATE, "down");
+                intent.setPackage("jp.project2by2.fcntparts");
+                ctx.sendBroadcastAsUser(intent, UserHandle.CURRENT);
+                return null;
+            }
+        } else if (keyCode == KeyEvent.KEYCODE_BUTTON_THUMBR) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                Intent intent = new Intent(Constants.EXLIDER_ACTION_FINGER_EVENT);
+                intent.putExtra(Constants.EXLIDER_ACTION_FINGER_STATE, "up");
+                intent.setPackage("jp.project2by2.fcntparts");
+                ctx.sendBroadcastAsUser(intent, UserHandle.CURRENT);
+                return null;
+            }
+        }
+
         int scanCode = event.getScanCode();
         if (scanCode == KEY_ASSISTANT) {
             switch (event.getAction()) {

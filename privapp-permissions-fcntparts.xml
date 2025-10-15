@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <permissions>
     <privapp-permissions package="jp.project2by2.fcntparts">
+        <permission name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
         <permission name="android.permission.WRITE_SECURE_SETTINGS" />
     </privapp-permissions>
 </permissions>
