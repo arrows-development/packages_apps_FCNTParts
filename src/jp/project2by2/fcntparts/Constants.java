@@ -17,5 +17,6 @@ public class Constants {
     // Exlider
     public static final String EXLIDER_ACTION_FINGER_EVENT = "jp.project2by2.fcntparts.exlider.ACTION_FINGER_EVENT";
     public static final String EXLIDER_ACTION_FINGER_STATE = "FingerState";
+    public static final String KEY_EXLIDER_SCROLL_SPEED = "exlider_scroll_speed";
 
 }
