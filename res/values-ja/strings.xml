@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2025 The 2by2 Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- FCNTParts -->
+    <string name="fcnt_parts_title">FCNT Parts</string>
+    <string name="kernel_node_access_error">カーネルノードへのアクセスに失敗しました。sysfs または procfs 属性へのパスが正確であること、適切な権限があること、SELinux ポリシーが適切に設定されていることを確認してください。</string>
+    <string name="kernel_node_returned_value_unknown">ノードによって返される値の文字列リソースが見つかりません。</string>
+    <string name="tile_add">クイック設定タイルを追加</string>
+    <string name="tile_added">タイルを追加しました。</string>
+    <string name="tile_not_added">タイルは追加されていません。</string>
+    <string name="tile_already_added">タイルは既に追加されています。</string>
+    <string name="tile_on">オン</string>
+    <string name="tile_off">オフ</string>
+    <string name="tile_camera_in_use">カメラを使用中</string>
+
+    <!-- Action Key -->
+    <string name="actionkey_title">アクションキー</string>
+    <string name="actionkey_summary">アクションキーの動作を設定します</string>
+    <string name="actionkey_perform_type_short_title">1回押し</string>
+    <string name="actionkey_perform_type_long_title">長押し</string>
+    <string name="actionkey_hold_duration_title">長押しの長さ (ミリ秒)</string>
+
+    <!-- Action Key - Supported actions -->
+    <string name="actionkey_perform_no_action_title">何もしない</string>
+    <string name="actionkey_perform_assistant_title">アシスタントを起動</string>
+    <string name="actionkey_perform_lens_title">レンズ</string>
+    <string name="actionkey_perform_launch_app_title">アプリを起動</string>
+
+    <!-- Exlider -->
+    <string name="exlider_title">Exlider</string>
+    <string name="exlider_summary">指紋認証センサーを使用して画面をスクロールします。\n・指紋認証センサーに指を置いたまま1秒ほど待つとスクロールモードのオン・オフを切り替えます。\n・スクロールモードの状態で、指紋認証センサーを上下にスライドすることで画面がスクロールします。\n・画面が誤作動するときはオフにしてください。</string>
+    <string name="exlider_main_switch_title">Exlider を使用</string>
+    <string name="exlider_enabled_message">Exlider スクロールモード</string>
+    <string name="exlider_disabled_message">Exlider をオフにしました</string>
+
+    <!-- Custom seekbar -->
+    <string name="custom_seekbar_value">値: <xliff:g id="v">%s</xliff:g></string>
+    <string name="custom_seekbar_default_value">デフォルト</string>
+    <string name="custom_seekbar_default_value_to_set">デフォルトの値: <xliff:g id="v">%s</xliff:g>\n長押しでセットします</string>
+    <string name="custom_seekbar_default_value_is_set">デフォルト値をセットしました</string>
+</resources>
