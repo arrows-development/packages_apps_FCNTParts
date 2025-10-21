@@ -95,4 +95,8 @@ public class ActionKeyFragment extends PreferenceFragmentCompat
         int valueLongPressAction = Settings.Secure.getInt(cr, Constants.KEY_ACTIONKEY_PERFORM_TYPE_LONG, 1);
         mLongPressPreference.setValue(Integer.toString(valueLongPressAction));
     }
+
+    public static boolean isActionKeySupported(Context context) {
+        return context.getResources().getBoolean(R.bool.config_actionKeySupported);
+    }
 }

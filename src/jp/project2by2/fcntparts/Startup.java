@@ -12,10 +12,17 @@ import android.content.Intent;
 import jp.project2by2.fcntparts.utils.ComponentUtils;
 import jp.project2by2.fcntparts.utils.FileUtils;
 
+import jp.project2by2.fcntparts.actionkey.ActionKeyActivity;
+import jp.project2by2.fcntparts.actionkey.ActionKeyFragment;
+
 public class Startup extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+
+        // Action Key
+        ComponentUtils.toggleComponent(context, ActionKeyActivity.class, ActionKeyFragment.isActionKeySupported(context));
+
         final String action = intent.getAction();
     }
 }
