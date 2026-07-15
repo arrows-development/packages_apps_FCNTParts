@@ -7,9 +7,22 @@
         android:key="exlider_intro"
         android:title="@string/exlider_summary" />
 
+    <com.android.settingslib.widget.TopIntroPreference
+        android:key="exlider_intro_2"
+        android:title="@string/exlider_summary_2" />
+
     <com.android.settingslib.widget.MainSwitchPreference
         android:key="exlider"
         android:title="@string/exlider_main_switch_title"
+        android:persistent="false"
         android:defaultValue="false" />
+
+    <jp.project2by2.fcntparts.exlider.ExliderSpeedPreference
+        android:key="exlider_scroll_speed"
+        android:title="@string/exlider_scroll_speed_title"
+        android:summary="@string/exlider_scroll_speed_summary"
+        android:max="100"
+        android:defaultValue="50"
+        settings:continuousUpdates="true" />
 
 </PreferenceScreen>

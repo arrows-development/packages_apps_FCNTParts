@@ -34,7 +34,10 @@
     <!-- Exlider -->
     <string name="exlider_title">Exlider</string>
     <string name="exlider_summary">Use fingerprint sensor for scroll gestures</string>
+    <string name="exlider_summary_2">- Put finger to fingerprint sensor, hold to turn on scroll mode.\n- On scroll mode, you can scroll it sliding finger on sensor.\n- If you have any issues about display, please turn off exlider.</string>
     <string name="exlider_main_switch_title">Use Exlider</string>
+    <string name="exlider_scroll_speed_title">Scroll speed</string>
+    <string name="exlider_scroll_speed_summary">Adjust exlider scroll speed</string>
     <string name="exlider_enabled_message">Exlider Scroll Mode</string>
     <string name="exlider_disabled_message">Exlider turned off</string>
 

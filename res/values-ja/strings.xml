@@ -32,8 +32,11 @@
 
     <!-- Exlider -->
     <string name="exlider_title">Exlider</string>
-    <string name="exlider_summary">指紋認証センサーを使用して画面をスクロールします。\n・指紋認証センサーに指を置いたまま1秒ほど待つとスクロールモードのオン・オフを切り替えます。\n・スクロールモードの状態で、指紋認証センサーを上下にスライドすることで画面がスクロールします。\n・画面が誤作動するときはオフにしてください。</string>
+    <string name="exlider_summary">指紋認証センサーを使用して画面をスクロールします</string>
+    <string name="exlider_summary_2">・指紋認証センサーに指を置いたまま1秒ほど待つとスクロールモードのオン・オフを切り替えます。\n・スクロールモードの状態で、指紋認証センサーを上下にスライドすることで画面がスクロールします。\n・画面が誤作動するときはオフにしてください。</string>
     <string name="exlider_main_switch_title">Exlider を使用</string>
+    <string name="exlider_scroll_speed_title">スクロール速度</string>
+    <string name="exlider_scroll_speed_summary">画面のスクロール速度を調整します</string>
     <string name="exlider_enabled_message">Exlider スクロールモード</string>
     <string name="exlider_disabled_message">Exlider をオフにしました</string>
 
