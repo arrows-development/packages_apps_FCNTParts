@@ -48,20 +48,22 @@ public class ExliderService extends AccessibilityService {
     private static final int AXIS_MAX = 0x3FFF;
 
     private static final int DEFAULT_FRAME_TIME_MS = 32000;
-    private static final long SCROLL_DURATION_MS = 100;
+    private static final long MIN_SCROLL_DURATION_MS = 32;
+    private static final long MAX_SCROLL_DURATION_MS = 100;
     private static final long TOGGLE_DELAY_MS = 700;
     private static final long POSITION_DETECTION_DELAY_MS = 100;
     private static final int MIN_SCROLL_ACCEL = 32;
     private static final int POSITION_DELTA_THRESHOLD = AXIS_MAX / 8;
     private static final int DIRECTION_START_THRESHOLD = 64;
-    private static final int RETURN_DEAD_ZONE = 24;
+    private static final int RETURN_DEAD_ZONE = 32;
     private static final int MAX_RELATIVE_TRAVEL = 1024;
     private static final float MIN_SCROLL_SPEED = 1.0f;
     private static final float MAX_SCROLL_SPEED = 10.0f;
     private static final float DEFAULT_SCROLL_SPEED = 5.0f;
 
-    // A gesture shorter than touch slop may be interpreted as a tap.
-    private static final float SCROLL_DISTANCE_PER_SCALE = 20f;
+    // Keep the existing 20 px / 100 ms / scale speed while aligning gesture
+    // updates with the stock FPC navigation frame (32 ms).
+    private static final float SCROLL_PIXELS_PER_MS_PER_SCALE = 0.2f;
 
     private int mFpcFrameTimeMs;
 
@@ -70,7 +72,6 @@ public class ExliderService extends AccessibilityService {
     private int mLastAxisPos;
     private int mRelativeTravel;
     private float mScrollScale;
-    private float mMinScrollScale;
     private long mFingerDownTime;
 
     private float mScrollSpeed;
@@ -124,9 +125,6 @@ public class ExliderService extends AccessibilityService {
         contentResolver.registerContentObserver(
                 Settings.Secure.getUriFor(Constants.KEY_EXLIDER_SCROLL_SPEED),
                 false, mScrollSpeedObserver);
-        mMinScrollScale = (ViewConfiguration.get(this).getScaledTouchSlop() * 2f + 1f)
-                / SCROLL_DISTANCE_PER_SCALE;
-
         // Catch the mouse events.
         AccessibilityServiceInfo info = getServiceInfo();
         if (info == null) {
@@ -230,7 +228,7 @@ public class ExliderService extends AccessibilityService {
         if (mScrolling || Math.abs(mRelativeTravel) < DIRECTION_START_THRESHOLD) return;
 
         mScrollDirection = Integer.signum(mRelativeTravel);
-        mScrollScale = mScrollDirection * Math.max(mMinScrollScale, mScrollSpeed);
+        mScrollScale = mScrollDirection * mScrollSpeed;
         mScrolling = true;
         Log.d(TAG, "Starting relative scroll: direction=" + mScrollDirection
                 + ", travel=" + mRelativeTravel + ", scale=" + mScrollScale);
@@ -413,8 +411,13 @@ public class ExliderService extends AccessibilityService {
             mStrokeY = h * 0.5f;
         }
 
-        final float dy = -mScrollScale * SCROLL_DISTANCE_PER_SCALE;
         final float minimumDistance = ViewConfiguration.get(this).getScaledTouchSlop() * 2f;
+        final float pixelsPerMs = Math.abs(mScrollScale)
+                * SCROLL_PIXELS_PER_MS_PER_SCALE;
+        final long duration = Math.max(MIN_SCROLL_DURATION_MS,
+                Math.min(MAX_SCROLL_DURATION_MS,
+                        (long) Math.ceil((minimumDistance + 1f) / pixelsPerMs)));
+        final float dy = -mScrollScale * SCROLL_PIXELS_PER_MS_PER_SCALE * duration;
         if (Math.abs(dy) <= minimumDistance) {
             stopScrolling();
             return;
@@ -433,10 +436,10 @@ public class ExliderService extends AccessibilityService {
         final GestureDescription.StrokeDescription nextStroke;
         if (mContinuedStroke == null) {
             nextStroke = new GestureDescription.StrokeDescription(
-                    p, 0, SCROLL_DURATION_MS, true);
+                    p, 0, duration, true);
         } else {
             nextStroke = mContinuedStroke.continueStroke(
-                    p, 0, SCROLL_DURATION_MS, true);
+                    p, 0, duration, true);
         }
         mContinuedStroke = nextStroke;
         mStrokeY = nextY;
