@@ -7,10 +7,6 @@
         android:key="exlider_intro"
         android:title="@string/exlider_summary" />
 
-    <com.android.settingslib.widget.TopIntroPreference
-        android:key="exlider_intro_2"
-        android:title="@string/exlider_summary_2" />
-
     <com.android.settingslib.widget.MainSwitchPreference
         android:key="exlider"
         android:title="@string/exlider_main_switch_title"
@@ -24,5 +20,9 @@
         android:max="100"
         android:defaultValue="50"
         settings:continuousUpdates="true" />
+
+    <com.android.settingslib.widget.FooterPreference
+        android:key="exlider_intro_2"
+        android:title="@string/exlider_summary_2" />
 
 </PreferenceScreen>
