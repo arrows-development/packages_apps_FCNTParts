@@ -130,7 +130,7 @@ public class ExliderService extends AccessibilityService {
         if (info == null) {
             info = new AccessibilityServiceInfo();
         }
-        info.setMotionEventSources(android.view.InputDevice.SOURCE_MOUSE);
+        info.setMotionEventSources(android.view.InputDevice.SOURCE_MOUSE | android.view.InputDevice.SOURCE_TRACKBALL);
         info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
         info.flags = AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS
