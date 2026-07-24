@@ -40,6 +40,10 @@
     <string name="exlider_enabled_message">Exlider スクロールモード</string>
     <string name="exlider_disabled_message">Exlider をオフにしました</string>
 
+    <!-- Hold on display -->
+    <string name="hold_on_display_title">持ってる間ON</string>
+    <string name="hold_on_display_summary">デバイスを手に持って動きのある間は画面を常時点灯にします</string>
+
     <!-- Custom seekbar -->
     <string name="custom_seekbar_value">値: <xliff:g id="v">%s</xliff:g></string>
     <string name="custom_seekbar_default_value">デフォルト</string>

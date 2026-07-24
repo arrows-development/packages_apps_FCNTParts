@@ -41,6 +41,10 @@
     <string name="exlider_enabled_message">Exlider Scroll Mode</string>
     <string name="exlider_disabled_message">Exlider turned off</string>
 
+    <!-- Hold on display -->
+    <string name="hold_on_display_title">Keep lit when held</string>
+    <string name="hold_on_display_summary">Keep screen backlight on when the phone is held and detects motion.</string>
+
     <!-- Custom seekbar -->
     <string name="custom_seekbar_value">Value: <xliff:g id="v">%s</xliff:g></string>
     <string name="custom_seekbar_default_value">by default</string>

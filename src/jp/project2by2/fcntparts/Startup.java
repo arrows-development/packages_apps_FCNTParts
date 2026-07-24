@@ -14,6 +14,7 @@ import jp.project2by2.fcntparts.utils.FileUtils;
 
 import jp.project2by2.fcntparts.actionkey.ActionKeyActivity;
 import jp.project2by2.fcntparts.actionkey.ActionKeyFragment;
+import jp.project2by2.fcntparts.holdondisplay.HoldOnDisplayService;
 
 public class Startup extends BroadcastReceiver {
 
@@ -22,6 +23,8 @@ public class Startup extends BroadcastReceiver {
 
         // Action Key
         ComponentUtils.toggleComponent(context, ActionKeyActivity.class, ActionKeyFragment.isActionKeySupported(context));
+
+        HoldOnDisplayService.updateState(context);
 
         final String action = intent.getAction();
     }

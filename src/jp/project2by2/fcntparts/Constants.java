@@ -19,4 +19,8 @@ public class Constants {
     public static final String EXLIDER_ACTION_FINGER_STATE = "FingerState";
     public static final String KEY_EXLIDER_SCROLL_SPEED = "exlider_scroll_speed";
 
+    // Hold on display
+    public static final String KEY_HOLD_ON_DISPLAY_ENABLED = "hold_on_display_enabled";
+    public static final int FCNT_HOLD_ON_DISPLAY_SENSOR_TYPE = 33171103;
+
 }
