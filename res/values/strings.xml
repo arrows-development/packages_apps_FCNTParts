@@ -40,6 +40,7 @@
     <string name="exlider_scroll_speed_summary">Adjust exlider scroll speed</string>
     <string name="exlider_enabled_message">Exlider Scroll Mode</string>
     <string name="exlider_disabled_message">Exlider turned off</string>
+    <string name="exlider_fingerprint_extension_error">Cannot initialize fingerprint sensor extension</string>
 
     <!-- Hold on display -->
     <string name="hold_on_display_title">Keep lit when held</string>

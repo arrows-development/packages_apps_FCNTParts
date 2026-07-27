@@ -39,6 +39,7 @@
     <string name="exlider_scroll_speed_summary">画面のスクロール速度を調整します</string>
     <string name="exlider_enabled_message">Exlider スクロールモード</string>
     <string name="exlider_disabled_message">Exlider をオフにしました</string>
+    <string name="exlider_fingerprint_extension_error">指紋センサー拡張機能を初期化できません</string>
 
     <!-- Hold on display -->
     <string name="hold_on_display_title">持ってる間ON</string>

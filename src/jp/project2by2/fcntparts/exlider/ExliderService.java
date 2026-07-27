@@ -10,6 +10,7 @@ import android.accessibilityservice.AccessibilityServiceInfo;
 import android.accessibilityservice.GestureDescription;
 import android.annotation.NonNull;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.database.ContentObserver;
 import android.content.Context;
@@ -24,6 +25,7 @@ import android.os.Looper;
 import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.Display;
@@ -37,6 +39,9 @@ import com.fingerprints.extension.FpcRequest;
 import com.fingerprints.extension.util.BytesUtil;
 import com.fingerprints.fpc.extension.IFpcExtension;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import jp.project2by2.fcntparts.Constants;
 
 import jp.project2by2.fcntparts.R;
@@ -44,6 +49,11 @@ import jp.project2by2.fcntparts.R;
 public class ExliderService extends AccessibilityService {
 
     private static final String TAG = ExliderService.class.getSimpleName();
+    private static final String FPC_EXTENSION_SERVICE =
+            "com.fingerprints.fpc.extension.IFpcExtension/default";
+    private static final ComponentName EXLIDER_SERVICE = new ComponentName(
+            "jp.project2by2.fcntparts",
+            "jp.project2by2.fcntparts.exlider.ExliderService");
 
     private static final int AXIS_MAX = 0x3FFF;
 
@@ -158,11 +168,21 @@ public class ExliderService extends AccessibilityService {
             /* flags = */ Context.RECEIVER_EXPORTED
         );
 
-        // Init IFpcExtension service.
-        IBinder binder = ServiceManager.waitForService("com.fingerprints.fpc.extension.IFpcExtension/default");
+        // Do not use waitForService() here.  It attempts to start a missing lazy
+        // service repeatedly, which blocks this service and spams servicemanager.
+        // The extension must already be registered for Exlider to be available.
+        IBinder binder = ServiceManager.checkService(FPC_EXTENSION_SERVICE);
+        if (binder == null) {
+            handleFpcExtensionUnavailable();
+            return;
+        }
         fpcExtService = IFpcExtension.Stub.asInterface(binder);
-        setFpcNavigationEnabled(true);
-        setFpcNavigationFrametime(DEFAULT_FRAME_TIME_MS);
+        if (fpcExtService == null
+                || !setFpcNavigationEnabled(true)
+                || !setFpcNavigationFrametime(DEFAULT_FRAME_TIME_MS)) {
+            handleFpcExtensionUnavailable();
+            return;
+        }
 
         // Init completed
         Log.i(TAG, "Exlider service is ready");
@@ -270,8 +290,43 @@ public class ExliderService extends AccessibilityService {
         if (contentResolver != null) {
             contentResolver.unregisterContentObserver(mScrollSpeedObserver);
         }
-        setFpcNavigationEnabled(false);
+        if (fpcExtService != null) {
+            setFpcNavigationEnabled(false);
+        }
         super.onDestroy();
+    }
+
+    private void handleFpcExtensionUnavailable() {
+        Log.e(TAG, "Cannot initialize fingerprint sensor extension");
+        Toast.makeText(this, R.string.exlider_fingerprint_extension_error,
+                Toast.LENGTH_LONG).show();
+        disableExliderAccessibilityService();
+    }
+
+    /** Removes only Exlider from the enabled accessibility-service list. */
+    private void disableExliderAccessibilityService() {
+        Set<String> services = new LinkedHashSet<>();
+        String setting = Settings.Secure.getString(
+                contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+        if (!TextUtils.isEmpty(setting)) {
+            TextUtils.SimpleStringSplitter splitter = new TextUtils.SimpleStringSplitter(':');
+            splitter.setString(setting);
+            for (String service : splitter) {
+                ComponentName component = ComponentName.unflattenFromString(service);
+                if (!EXLIDER_SERVICE.equals(component) && !TextUtils.isEmpty(service)) {
+                    services.add(service);
+                }
+            }
+        }
+
+        if (!Settings.Secure.putString(contentResolver,
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, TextUtils.join(":", services))) {
+            Log.e(TAG, "Failed to disable Exlider accessibility service");
+            return;
+        }
+        if (services.isEmpty()) {
+            Settings.Secure.putInt(contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, 0);
+        }
     }
 
     private void onFingerDown() {
