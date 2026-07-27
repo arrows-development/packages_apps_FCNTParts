@@ -38,6 +38,7 @@ import android.widget.Toast;
 import com.fingerprints.extension.FpcRequest;
 import com.fingerprints.extension.util.BytesUtil;
 import com.fingerprints.fpc.extension.IFpcExtension;
+import com.fcnt.hardware.biometrics.fingerprint.IFcntExlider;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -51,13 +52,16 @@ public class ExliderService extends AccessibilityService {
     private static final String TAG = ExliderService.class.getSimpleName();
     private static final String FPC_EXTENSION_SERVICE =
             "com.fingerprints.fpc.extension.IFpcExtension/default";
+    private static final String FCNT_EXLIDER_SERVICE =
+            "com.fcnt.hardware.biometrics.fingerprint.IFcntExlider/default";
     private static final ComponentName EXLIDER_SERVICE = new ComponentName(
             "jp.project2by2.fcntparts",
             "jp.project2by2.fcntparts.exlider.ExliderService");
 
     private static final int AXIS_MAX = 0x3FFF;
 
-    private static final int DEFAULT_FRAME_TIME_MS = 32000;
+    // The HAL expresses its frame interval in microseconds (32 ms).
+    private static final int DEFAULT_FRAME_INTERVAL_US = 32000;
     private static final long MIN_SCROLL_DURATION_MS = 32;
     private static final long MAX_SCROLL_DURATION_MS = 100;
     private static final long TOGGLE_DELAY_MS = 700;
@@ -66,6 +70,9 @@ public class ExliderService extends AccessibilityService {
     private static final int POSITION_DELTA_THRESHOLD = AXIS_MAX / 8;
     private static final int DIRECTION_START_THRESHOLD = 64;
     private static final int RETURN_DEAD_ZONE = 32;
+    private static final int FCNT_MIN_SCROLL_DELTA = 1;
+    private static final int FCNT_DIRECTION_START_THRESHOLD = 2;
+    private static final int FCNT_RETURN_DEAD_ZONE = 1;
     private static final int MAX_RELATIVE_TRAVEL = 1024;
     private static final float MIN_SCROLL_SPEED = 1.0f;
     private static final float MAX_SCROLL_SPEED = 10.0f;
@@ -75,7 +82,7 @@ public class ExliderService extends AccessibilityService {
     // updates with the stock FPC navigation frame (32 ms).
     private static final float SCROLL_PIXELS_PER_MS_PER_SCALE = 0.2f;
 
-    private int mFpcFrameTimeMs;
+    private int mFpcFrameIntervalUs;
 
     private int mScrollDirection;
     private int mInitialAxisPos;
@@ -111,6 +118,7 @@ public class ExliderService extends AccessibilityService {
     private BroadcastReceiver mFingerStateReceiver;
 
     private IFpcExtension fpcExtService;
+    private IFcntExlider fcntExliderService;
 
     private volatile boolean mInitialized = false;
 
@@ -171,15 +179,7 @@ public class ExliderService extends AccessibilityService {
         // Do not use waitForService() here.  It attempts to start a missing lazy
         // service repeatedly, which blocks this service and spams servicemanager.
         // The extension must already be registered for Exlider to be available.
-        IBinder binder = ServiceManager.checkService(FPC_EXTENSION_SERVICE);
-        if (binder == null) {
-            handleFpcExtensionUnavailable();
-            return;
-        }
-        fpcExtService = IFpcExtension.Stub.asInterface(binder);
-        if (fpcExtService == null
-                || !setFpcNavigationEnabled(true)
-                || !setFpcNavigationFrametime(DEFAULT_FRAME_TIME_MS)) {
+        if (!initializeFingerprintExtension()) {
             handleFpcExtensionUnavailable();
             return;
         }
@@ -207,9 +207,13 @@ public class ExliderService extends AccessibilityService {
         mLastAxisPos = packet.pos;
 
         final long now = SystemClock.uptimeMillis();
-        final boolean accelMovement = Math.abs(packet.accel) >= MIN_SCROLL_ACCEL;
+        final boolean usingFcntExlider = fcntExliderService != null;
+        final int minimumMovement = usingFcntExlider
+                ? FCNT_MIN_SCROLL_DELTA : MIN_SCROLL_ACCEL;
+        final boolean accelMovement = Math.abs(packet.accel) >= minimumMovement;
         final boolean positionMovement =
-                now - mFingerDownTime >= POSITION_DETECTION_DELAY_MS
+                !usingFcntExlider
+                && now - mFingerDownTime >= POSITION_DETECTION_DELAY_MS
                 && positionDelta >= POSITION_DELTA_THRESHOLD;
         if (!accelMovement && !positionMovement) return;
 
@@ -238,14 +242,18 @@ public class ExliderService extends AccessibilityService {
         // Returning to the recorded origin brakes the active scroll. Crossing
         // beyond the origin's dead zone is required before the opposite direction
         // can start, avoiding an abrupt reversal at the centre position.
-        if (mScrolling && (Math.abs(mRelativeTravel) <= RETURN_DEAD_ZONE
+        final int returnDeadZone = usingFcntExlider
+                ? FCNT_RETURN_DEAD_ZONE : RETURN_DEAD_ZONE;
+        if (mScrolling && (Math.abs(mRelativeTravel) <= returnDeadZone
                 || Integer.signum(mRelativeTravel) != mScrollDirection)) {
             Log.d(TAG, "Stopping scroll at initial position: travel=" + mRelativeTravel);
             stopScrolling();
             return;
         }
 
-        if (mScrolling || Math.abs(mRelativeTravel) < DIRECTION_START_THRESHOLD) return;
+        final int directionStartThreshold = usingFcntExlider
+                ? FCNT_DIRECTION_START_THRESHOLD : DIRECTION_START_THRESHOLD;
+        if (mScrolling || Math.abs(mRelativeTravel) < directionStartThreshold) return;
 
         mScrollDirection = Integer.signum(mRelativeTravel);
         mScrollScale = mScrollDirection * mScrollSpeed;
@@ -290,7 +298,7 @@ public class ExliderService extends AccessibilityService {
         if (contentResolver != null) {
             contentResolver.unregisterContentObserver(mScrollSpeedObserver);
         }
-        if (fpcExtService != null) {
+        if (fcntExliderService != null || fpcExtService != null) {
             setFpcNavigationEnabled(false);
         }
         super.onDestroy();
@@ -384,6 +392,15 @@ public class ExliderService extends AccessibilityService {
 
     public boolean setFpcNavigationEnabled(boolean enabled) {
         Log.d(TAG, "setFpcNavigationEnabled: " + enabled);
+        if (fcntExliderService != null) {
+            try {
+                return fcntExliderService.setExliderStatus(enabled);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to transact with IFcntExlider", e);
+                return false;
+            }
+        }
+        if (fpcExtService == null) return false;
         try {
             fpcExtService.request(FpcRequest.NAVIGATION_SET_NAVIGATION, BytesUtil.boolToBytes(enabled));
         } catch (Exception e) {
@@ -393,11 +410,23 @@ public class ExliderService extends AccessibilityService {
         return true;
     }
 
-    public boolean setFpcNavigationFrametime(int ms) {
-        Log.d(TAG, "setFpcNavigationFrametime: " + ms);
+    public boolean setFpcNavigationFrametime(int intervalUs) {
+        Log.d(TAG, "setFpcNavigationFrametime: " + intervalUs);
+        if (fcntExliderService != null) {
+            try {
+                if (!fcntExliderService.setExliderFrameInterval(intervalUs)) return false;
+                mFpcFrameIntervalUs = intervalUs;
+                return true;
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to transact with IFcntExlider", e);
+                return false;
+            }
+        }
+        if (fpcExtService == null) return false;
         try {
-            fpcExtService.request(FpcRequest.NAVIGATION_SET_NAVIGATION_FRAME_RATE, BytesUtil.intToBytes(ms));
-            mFpcFrameTimeMs = ms;
+            fpcExtService.request(FpcRequest.NAVIGATION_SET_NAVIGATION_FRAME_RATE,
+                    BytesUtil.intToBytes(intervalUs));
+            mFpcFrameIntervalUs = intervalUs;
         } catch (Exception e) {
             Log.e(TAG, "Failed to transact with IFpcExtension", e);
             return false;
@@ -406,6 +435,15 @@ public class ExliderService extends AccessibilityService {
     }
 
     public boolean getFpcNavigationEnabled() {
+        if (fcntExliderService != null) {
+            try {
+                return fcntExliderService.getExliderStatus();
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to transact with IFcntExlider", e);
+                return false;
+            }
+        }
+        if (fpcExtService == null) return false;
         byte[] enableInfo = new byte[1];
         try {
             fpcExtService.request(FpcRequest.NAVIGATION_IS_ENABLE, enableInfo);
@@ -414,6 +452,35 @@ public class ExliderService extends AccessibilityService {
             return false;
         }
         return enableInfo[0] == 1;
+    }
+
+    /**
+     * Newer FCNT HALs expose a typed Exlider AIDL interface. Older devices use
+     * FPC's generic request interface, so only probe it when the FCNT service
+     * is not registered. checkService() is deliberately non-blocking.
+     */
+    private boolean initializeFingerprintExtension() {
+        try {
+            IBinder binder = ServiceManager.checkService(FCNT_EXLIDER_SERVICE);
+            if (binder != null) {
+                fcntExliderService = IFcntExlider.Stub.asInterface(binder);
+                if (fcntExliderService == null) return false;
+                Log.i(TAG, "Using IFcntExlider");
+                return setFpcNavigationEnabled(true)
+                        && setFpcNavigationFrametime(DEFAULT_FRAME_INTERVAL_US);
+            }
+
+            binder = ServiceManager.checkService(FPC_EXTENSION_SERVICE);
+            if (binder == null) return false;
+            fpcExtService = IFpcExtension.Stub.asInterface(binder);
+            if (fpcExtService == null) return false;
+            Log.i(TAG, "Using IFpcExtension");
+            return setFpcNavigationEnabled(true)
+                    && setFpcNavigationFrametime(DEFAULT_FRAME_INTERVAL_US);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to initialize fingerprint sensor extension", e);
+            return false;
+        }
     }
 
     private void loadScrollSpeed() {
@@ -588,16 +655,20 @@ public class ExliderService extends AccessibilityService {
         return difference;
     }
 
-    // Util for parse wheel event value
+    // Util for parsing the packed AXIS_VSCROLL value.
     private static final class FpcPacket {
-        final int accel; // signed 16-bit
-        final int pos;   // 0..16383
+        final int accel; // normalized signed movement delta
+        final int pos;   // legacy axis position or FCNT detect-zone bits
         FpcPacket(int accel, int pos) { this.accel = accel; this.pos = pos; }
     }
     @androidx.annotation.Nullable
     private FpcPacket decodePacked(float v) {
         final int packed = Math.round(v);
         final int lo = packed & 0xFFFF;
+        if (fcntExliderService != null) {
+            // FCNT's OEM service decodes rawDeltaY as -(packed >> 18).
+            return new FpcPacket(-(packed >> 18), lo);
+        }
         final int hi = (packed >>> 16) & 0xFFFF;
         final int accel = (short) hi;
         int pos = lo & 0xFFFF;
