@@ -13,4 +13,6 @@ PRODUCT_PACKAGES += \
     init.fcntparts.rc
 
 # FCNTParts sepolicy
-BOARD_SEPOLICY_DIRS += packages/apps/FCNTParts/sepolicy
+SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += packages/apps/FCNTParts/sepolicy/private
+SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += packages/apps/FCNTParts/sepolicy/public
+BOARD_VENDOR_SEPOLICY_DIRS += packages/apps/FCNTParts/sepolicy/vendor
