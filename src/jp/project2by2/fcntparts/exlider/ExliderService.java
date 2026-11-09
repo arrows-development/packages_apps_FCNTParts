@@ -119,6 +119,7 @@ public class ExliderService extends AccessibilityService {
 
     private IFpcExtension fpcExtService;
     private IFcntExlider fcntExliderService;
+    private FpcNavigationHidl fpcNavigationHidl;
 
     private volatile boolean mInitialized = false;
 
@@ -298,7 +299,7 @@ public class ExliderService extends AccessibilityService {
         if (contentResolver != null) {
             contentResolver.unregisterContentObserver(mScrollSpeedObserver);
         }
-        if (fcntExliderService != null || fpcExtService != null) {
+        if (fcntExliderService != null || fpcExtService != null || fpcNavigationHidl != null) {
             setFpcNavigationEnabled(false);
         }
         super.onDestroy();
@@ -400,6 +401,15 @@ public class ExliderService extends AccessibilityService {
                 return false;
             }
         }
+        if (fpcNavigationHidl != null) {
+            try {
+                fpcNavigationHidl.setNavigation(enabled);
+                return true;
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to transact with IFingerprintNavigation", e);
+                return false;
+            }
+        }
         if (fpcExtService == null) return false;
         try {
             fpcExtService.request(FpcRequest.NAVIGATION_SET_NAVIGATION, BytesUtil.boolToBytes(enabled));
@@ -419,6 +429,16 @@ public class ExliderService extends AccessibilityService {
                 return true;
             } catch (Exception e) {
                 Log.e(TAG, "Failed to transact with IFcntExlider", e);
+                return false;
+            }
+        }
+        if (fpcNavigationHidl != null) {
+            try {
+                fpcNavigationHidl.setNavigationFrametime(intervalUs);
+                mFpcFrameIntervalUs = intervalUs;
+                return true;
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to transact with IFingerprintNavigation", e);
                 return false;
             }
         }
@@ -443,6 +463,14 @@ public class ExliderService extends AccessibilityService {
                 return false;
             }
         }
+        if (fpcNavigationHidl != null) {
+            try {
+                return fpcNavigationHidl.isEnabled();
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to transact with IFingerprintNavigation", e);
+                return false;
+            }
+        }
         if (fpcExtService == null) return false;
         byte[] enableInfo = new byte[1];
         try {
@@ -457,7 +485,8 @@ public class ExliderService extends AccessibilityService {
     /**
      * Newer FCNT HALs expose a typed Exlider AIDL interface. Older devices use
      * FPC's generic request interface, so only probe it when the FCNT service
-     * is not registered. checkService() is deliberately non-blocking.
+     * is not registered. Even older FPC HALs only provide the HIDL navigation
+     * extension, which is probed last. All lookups are deliberately non-blocking.
      */
     private boolean initializeFingerprintExtension() {
         try {
@@ -471,12 +500,26 @@ public class ExliderService extends AccessibilityService {
             }
 
             binder = ServiceManager.checkService(FPC_EXTENSION_SERVICE);
-            if (binder == null) return false;
-            fpcExtService = IFpcExtension.Stub.asInterface(binder);
-            if (fpcExtService == null) return false;
-            Log.i(TAG, "Using IFpcExtension");
-            return setFpcNavigationEnabled(true)
-                    && setFpcNavigationFrametime(DEFAULT_FRAME_INTERVAL_US);
+            if (binder != null) {
+                fpcExtService = IFpcExtension.Stub.asInterface(binder);
+                if (fpcExtService == null) return false;
+                Log.i(TAG, "Using IFpcExtension");
+                return setFpcNavigationEnabled(true)
+                        && setFpcNavigationFrametime(DEFAULT_FRAME_INTERVAL_US);
+            }
+
+            fpcNavigationHidl = FpcNavigationHidl.getService();
+            if (fpcNavigationHidl == null) return false;
+            Log.i(TAG, "Using HIDL IFingerprintNavigation");
+            // The unit of the HIDL frame time is not documented, so keep the
+            // HAL default instead of overriding it.
+            try {
+                Log.i(TAG, "HIDL navigation frametime: "
+                        + fpcNavigationHidl.getNavigationFrametime());
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to get HIDL navigation frametime", e);
+            }
+            return setFpcNavigationEnabled(true);
         } catch (Exception e) {
             Log.e(TAG, "Failed to initialize fingerprint sensor extension", e);
             return false;

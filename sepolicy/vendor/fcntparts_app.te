@@ -1,3 +1,7 @@
 allow fcntparts_app hal_fingerprint_test_service:service_manager find;
 
 binder_call(fcntparts_app, hal_fingerprint_default)
+
+# FPC HIDL navigation extension
+hwbinder_use(fcntparts_app)
+allow fcntparts_app hal_fingerprint_ext_hwservice:hwservice_manager find;
