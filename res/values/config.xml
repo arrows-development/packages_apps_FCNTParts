@@ -6,4 +6,24 @@
 
     <!-- Exlider -->
     <bool name="config_exliderSupported">true</bool>
+
+    <!-- Exlider: still touch (ms) required to arm the scroll mode toggle.
+         The toggle happens when the finger is released afterwards. -->
+    <integer name="config_exliderLongTapTime">500</integer>
+
+    <!-- Exlider: holding still for this long (ms) after arming cancels the toggle.
+         While in scroll mode, holding still for this long and releasing exits it. -->
+    <integer name="config_exliderLongTapCancelTime">1500</integer>
+
+    <!-- Exlider: scroll mode is left after this long (ms) without a touch. 0 disables. -->
+    <integer name="config_exliderScrollModeTimeout">30000</integer>
+
+    <!-- Exlider: slide distance (raw HAL units) to start scrolling after touching,
+         to stop / reverse while scrolling, and to start again after resting. -->
+    <integer name="config_exliderGearThresholdStart">45</integer>
+    <integer name="config_exliderGearThresholdChange">15</integer>
+    <integer name="config_exliderGearThresholdIdle">12</integer>
+
+    <!-- Exlider: invert the slide direction reported by the HAL. -->
+    <bool name="config_exliderInvertDirection">false</bool>
 </resources>
