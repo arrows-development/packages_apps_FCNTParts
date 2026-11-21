@@ -68,7 +68,7 @@ public class ExliderFragment extends PreferenceFragmentCompat
         mScrollSpeedPreference.setOnPreferenceChangeListener(this);
         float speed = Settings.Secure.getFloat(
                 mContentResolver,
-                Constants.KEY_EXLIDER_SCROLL_SPEED, 10.0f);
+                Constants.KEY_EXLIDER_SCROLL_SPEED, 5.0f);
         mScrollSpeedPreference.refresh(Math.round(Math.max(1.0f, Math.min(10.0f, speed)) * 10f));
         syncAccessibilitySwitch();
     }
