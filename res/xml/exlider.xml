@@ -28,7 +28,7 @@
         android:title="@string/exlider_scroll_speed_title"
         android:summary="@string/exlider_scroll_speed_summary"
         android:max="100"
-        android:defaultValue="50"
+        android:defaultValue="30"
         settings:continuousUpdates="true" />
 
     <com.android.settingslib.widget.FooterPreference

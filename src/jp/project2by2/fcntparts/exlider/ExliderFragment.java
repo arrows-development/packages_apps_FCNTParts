@@ -76,8 +76,10 @@ public class ExliderFragment extends PreferenceFragmentCompat
         mScrollSpeedPreference.setOnPreferenceChangeListener(this);
         float speed = Settings.Secure.getFloat(
                 mContentResolver,
-                Constants.KEY_EXLIDER_SCROLL_SPEED, 5.0f);
-        mScrollSpeedPreference.refresh(Math.round(Math.max(1.0f, Math.min(10.0f, speed)) * 10f));
+                Constants.KEY_EXLIDER_SCROLL_SPEED, Constants.EXLIDER_DEFAULT_SCROLL_SPEED);
+        // Not refresh(): before the seek bar is bound, it only moves the seek bar and
+        // leaves the preference value (and what gets displayed) unchanged.
+        mScrollSpeedPreference.setValue(Math.round(Math.max(1.0f, Math.min(10.0f, speed)) * 10f));
         syncAccessibilitySwitch();
     }
 

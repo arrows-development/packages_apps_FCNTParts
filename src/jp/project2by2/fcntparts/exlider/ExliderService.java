@@ -119,7 +119,7 @@ public class ExliderService extends AccessibilityService {
     // --- Scroll output ---
     private static final float MIN_SCROLL_SPEED = 1.0f;
     private static final float MAX_SCROLL_SPEED = 10.0f;
-    private static final float DEFAULT_SCROLL_SPEED = 5.0f;
+    private static final float DEFAULT_SCROLL_SPEED = Constants.EXLIDER_DEFAULT_SCROLL_SPEED;
     // Speed 5 roughly matches the stock default (0.07 wheel units per 144 Hz frame).
     private static final float SCROLL_DP_PER_SECOND_PER_SPEED = 128f;
     private static final int MAX_CATCH_UP_FRAMES = 3;

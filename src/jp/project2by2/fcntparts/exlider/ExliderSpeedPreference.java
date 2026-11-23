@@ -10,6 +10,7 @@ import android.util.AttributeSet;
 
 import java.util.Locale;
 
+import jp.project2by2.fcntparts.Constants;
 import jp.project2by2.fcntparts.CustomSeekBarPreference;
 
 /** A seek bar whose integer storage represents tenths of the Exlider speed. */
@@ -21,8 +22,8 @@ public class ExliderSpeedPreference extends CustomSeekBarPreference {
         mMaxValue = 100;
         mInterval = 1;
         mDefaultValueExists = true;
-        mDefaultValue = 50;
-        mValue = 100;
+        mDefaultValue = Math.round(Constants.EXLIDER_DEFAULT_SCROLL_SPEED * 10f);
+        mValue = mDefaultValue;
     }
 
     @Override
