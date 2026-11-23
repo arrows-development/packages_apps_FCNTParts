@@ -1,0 +1,3 @@
+# Fingerprint
+com.fcnt.hardware.biometrics.fingerprint.IFcntExlider/default               u:object_r:hal_fingerprint_test_service:s0
+com.fingerprints.fpc.extension.IFpcExtension/default                        u:object_r:hal_fingerprint_test_service:s0
