@@ -11,6 +11,7 @@ allow fcntparts_app {
   cameraserver_service
   content_capture_service
   device_state_service
+  fingerprint_service
   game_service
   gpu_service
   hint_service

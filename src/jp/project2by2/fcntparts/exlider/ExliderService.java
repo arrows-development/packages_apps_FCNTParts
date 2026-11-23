@@ -15,6 +15,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.ContentObserver;
 import android.graphics.Point;
@@ -189,6 +190,7 @@ public class ExliderService extends AccessibilityService {
     // Scroll output.
     private float mScrollSpeed = DEFAULT_SCROLL_SPEED;
     private int mScrollGear = 0;
+    private int mScrollDirection = ExliderIndicator.DIRECTION_NONE;
     private boolean mFramePosted = false;
     private long mLastFrameTimeNanos = 0;
     private float mPendingPixels = 0f;
@@ -219,6 +221,8 @@ public class ExliderService extends AccessibilityService {
     private IFcntExlider fcntExliderService;
     private FpcNavigationHidl fpcNavigationHidl;
 
+    private ExliderIndicator mIndicator;
+
     private final ContentObserver mSettingsObserver = new ContentObserver(mHandler) {
         @Override
         public void onChange(boolean selfChange) {
@@ -242,6 +246,7 @@ public class ExliderService extends AccessibilityService {
         mKeyguardManager = getSystemService(KeyguardManager.class);
         mVibrator = getSystemService(Vibrator.class);
         mChoreographer = Choreographer.getInstance();
+        mIndicator = new ExliderIndicator(this);
 
         loadConfig();
         loadSettings();
@@ -391,6 +396,12 @@ public class ExliderService extends AccessibilityService {
     }
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (mIndicator != null) mIndicator.onConfigurationChanged();
+    }
+
+    @Override
     public void onInterrupt() {
         Log.d(TAG, "onInterrupt");
     }
@@ -400,6 +411,10 @@ public class ExliderService extends AccessibilityService {
         Log.d(TAG, "onDestroy");
         stopScrolling();
         mHandler.removeCallbacksAndMessages(null);
+        if (mIndicator != null) {
+            mIndicator.destroy();
+            mIndicator = null;
+        }
         if (mFingerStateReceiver != null) {
             unregisterReceiver(mFingerStateReceiver);
             mFingerStateReceiver = null;
@@ -602,6 +617,13 @@ public class ExliderService extends AccessibilityService {
         if (DEBUG) Log.d(TAG, "State " + mState + " -> " + state);
         if (state != STATE_PENDING) mPendingExit = false;
         mState = state;
+        if (mIndicator != null) {
+            if (state == STATE_COMPLETE) {
+                mIndicator.show();
+            } else {
+                mIndicator.hide();
+            }
+        }
     }
 
     private void processScrollModeEvent(long eventTime, int delta) {
@@ -727,6 +749,9 @@ public class ExliderService extends AccessibilityService {
             cancelStroke(SystemClock.uptimeMillis());
         }
         mScrollGear = gear;
+        // Positive gear drags the content up, i.e. scrolls towards the bottom of it.
+        setScrollDirection(gear > 0
+                ? ExliderIndicator.DIRECTION_DOWN : ExliderIndicator.DIRECTION_UP);
         if (!mFramePosted) {
             mFramePosted = true;
             mChoreographer.postFrameCallback(mFrameCallback);
@@ -734,6 +759,7 @@ public class ExliderService extends AccessibilityService {
     }
 
     private void stopScrolling() {
+        setScrollDirection(ExliderIndicator.DIRECTION_NONE);
         mScrollGear = 0;
         mPendingPixels = 0f;
         mLastFrameTimeNanos = 0;
@@ -743,6 +769,15 @@ public class ExliderService extends AccessibilityService {
         mFramePosted = false;
         mHandler.removeCallbacks(mInjectRunnable);
         cancelStroke(SystemClock.uptimeMillis());
+    }
+
+    /** Updates the indicator and gives haptic feedback when scrolling starts, turns or stops. */
+    private void setScrollDirection(int direction) {
+        if (direction == mScrollDirection) return;
+        mScrollDirection = direction;
+        if (mIndicator != null) mIndicator.setDirection(direction);
+        performHaptic(direction == ExliderIndicator.DIRECTION_NONE
+                ? VibrationEffect.EFFECT_TICK : VibrationEffect.EFFECT_CLICK);
     }
 
     private final Choreographer.FrameCallback mFrameCallback = new Choreographer.FrameCallback() {
@@ -841,9 +876,13 @@ public class ExliderService extends AccessibilityService {
     }
 
     private void performHaptic() {
+        performHaptic(VibrationEffect.EFFECT_CLICK);
+    }
+
+    private void performHaptic(int effect) {
         if (mVibrator == null || !mVibrator.hasVibrator()) return;
         try {
-            mVibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK),
+            mVibrator.vibrate(VibrationEffect.createPredefined(effect),
                     VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH));
         } catch (Exception e) {
             Log.w(TAG, "Failed to vibrate", e);
