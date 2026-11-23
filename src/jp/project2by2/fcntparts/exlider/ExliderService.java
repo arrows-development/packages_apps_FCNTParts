@@ -132,6 +132,10 @@ public class ExliderService extends AccessibilityService {
     private static final int STATE_COMPLETE = 2;
     private static final int STATE_PENDING = 3;
 
+    // Gesture that toggles the scroll mode (Constants.KEY_EXLIDER_TOGGLE_GESTURE).
+    private static final int TOGGLE_DOUBLE_TAP = 0;
+    private static final int TOGGLE_LONG_TAP = 1;
+
     // Tunables, overridable per device by overlay.
     private long mLongTapTimeMs;
     private long mLongTapCancelTimeMs;
@@ -140,6 +144,12 @@ public class ExliderService extends AccessibilityService {
     private int mGearThreshChange;
     private int mGearThreshIdle;
     private boolean mInvertDirection;
+    private long mTapTimeoutMs;
+    private long mDoubleTapTimeoutMs;
+    private long mTapLiftGapMs;
+    private int mTapSlop;
+
+    private int mToggleGesture = TOGGLE_DOUBLE_TAP;
 
     private int mFpcFrameIntervalUs = DEFAULT_FRAME_INTERVAL_US;
 
@@ -160,6 +170,13 @@ public class ExliderService extends AccessibilityService {
     private long mThirdEventTime;
     private boolean mSkipLongTap;
     private long mLastFpcEventTime;
+
+    // Tap detection (double tap toggle).
+    private long mContactStartTime;
+    private long mContactLastTime;
+    private int mContactTravel;
+    private boolean mContactMoved;
+    private long mLastTapUpTime;
 
     // Gear (stock simple scroll).
     private int mCurrentGear;
@@ -232,6 +249,9 @@ public class ExliderService extends AccessibilityService {
                 Settings.Secure.getUriFor(Constants.KEY_EXLIDER_SCROLL_SPEED),
                 false, mSettingsObserver);
         mContentResolver.registerContentObserver(
+                Settings.Secure.getUriFor(Constants.KEY_EXLIDER_TOGGLE_GESTURE),
+                false, mSettingsObserver);
+        mContentResolver.registerContentObserver(
                 Settings.System.getUriFor(Settings.System.MOUSE_SCROLLING_ACCELERATION),
                 false, mSettingsObserver);
         mContentResolver.registerContentObserver(
@@ -260,7 +280,7 @@ public class ExliderService extends AccessibilityService {
                 if ("down".equals(state)) {
                     onFingerDown(SystemClock.uptimeMillis());
                 } else if ("up".equals(state)) {
-                    onFingerUp();
+                    onFingerUp(SystemClock.uptimeMillis());
                 }
             }
         };
@@ -331,15 +351,24 @@ public class ExliderService extends AccessibilityService {
             if (DEBUG) Log.d(TAG, "Exlider touched");
         }
         mLastFpcEventTime = SystemClock.uptimeMillis();
+        mContactLastTime = eventTime;
         mHandler.removeCallbacks(mContactLostRunnable);
-        mHandler.postDelayed(mContactLostRunnable, CONTACT_LOST_TIMEOUT_MS);
+        // The HAL reports a frame per frame interval while the finger rests on the
+        // sensor, so a short gap already means the finger was lifted. Detecting that
+        // quickly is required to tell the two taps of a double tap apart.
+        mHandler.postDelayed(mContactLostRunnable, isDoubleTapToggle()
+                ? mTapLiftGapMs : CONTACT_LOST_TIMEOUT_MS);
 
         if (delta == DELTA_IGNORED) delta = 0;
         if (Math.abs(delta) > MAX_VALID_DELTA) {
             if (DEBUG) Log.d(TAG, "Discard event: delta " + delta);
             return;
         }
-        if (delta != 0) mTotalY += delta;
+        if (delta != 0) {
+            mTotalY += delta;
+            mContactTravel += delta;
+            if (Math.abs(mContactTravel) > mTapSlop) mContactMoved = true;
+        }
 
         processScrollModeEvent(eventTime, delta);
     }
@@ -355,7 +384,7 @@ public class ExliderService extends AccessibilityService {
             if (keyCode == KeyEvent.KEYCODE_BUTTON_THUMBL) {
                 onFingerDown(event.getEventTime());
             } else {
-                onFingerUp();
+                onFingerUp(event.getEventTime());
             }
         }
         return true;
@@ -438,15 +467,27 @@ public class ExliderService extends AccessibilityService {
         prepareContact(eventTime);
     }
 
-    private void onFingerUp() {
+    private void onFingerUp(long eventTime) {
         if (DEBUG) Log.d(TAG, "onFingerUp");
+        if (mTouched || mContactPrepared) {
+            mContactLastTime = Math.max(mContactLastTime, eventTime);
+        }
         endContact();
     }
 
     private final Runnable mContactLostRunnable = () -> {
-        Log.w(TAG, "No exlider event for " + CONTACT_LOST_TIMEOUT_MS + "ms, assume finger up");
+        if (isDoubleTapToggle()) {
+            if (DEBUG) Log.d(TAG, "No exlider event for " + mTapLiftGapMs + "ms, finger up");
+        } else {
+            Log.w(TAG, "No exlider event for " + CONTACT_LOST_TIMEOUT_MS
+                    + "ms, assume finger up");
+        }
         endContact();
     };
+
+    private boolean isDoubleTapToggle() {
+        return mToggleGesture == TOGGLE_DOUBLE_TAP;
+    }
 
     private void prepareContact(long eventTime) {
         mContactPrepared = true;
@@ -455,6 +496,10 @@ public class ExliderService extends AccessibilityService {
         mThirdEventTime = 0;
         mSkipLongTap = false;
         mFirstTimeGearChange = true;
+        mContactStartTime = eventTime;
+        mContactLastTime = eventTime;
+        mContactTravel = 0;
+        mContactMoved = false;
         clearGear();
         stopScrolling();
         mHandler.removeCallbacks(mScrollModeTimeoutRunnable);
@@ -463,13 +508,22 @@ public class ExliderService extends AccessibilityService {
     private void endContact() {
         mHandler.removeCallbacks(mContactLostRunnable);
         final boolean wasActive = mTouched || mContactPrepared;
+        final boolean wasTouched = mTouched;
         mTouched = false;
         mContactPrepared = false;
         stopScrolling();
         clearGear();
         if (!wasActive) return;
 
-        if (mState == STATE_STANDBY) {
+        if (isDoubleTapToggle()) {
+            // A contact without a valid sensor frame (e.g. a key event only) is
+            // not counted as a tap, but still breaks a pending double tap.
+            if (wasTouched) {
+                onContactEnded();
+            } else {
+                mLastTapUpTime = 0;
+            }
+        } else if (mState == STATE_STANDBY) {
             setState(STATE_COMPLETE);
             Log.i(TAG, "Scroll mode enabled");
             Toast.makeText(this, mResources.getString(R.string.exlider_enabled_message),
@@ -489,6 +543,43 @@ public class ExliderService extends AccessibilityService {
         }
     }
 
+    /** Detects a double tap from two consecutive short, still contacts. */
+    private void onContactEnded() {
+        final long duration = mContactLastTime - mContactStartTime;
+        if (mContactMoved || duration > mTapTimeoutMs) {
+            if (DEBUG) {
+                Log.d(TAG, "Not a tap: moved=" + mContactMoved + " duration=" + duration);
+            }
+            mLastTapUpTime = 0;
+            return;
+        }
+        final long interval = mContactStartTime - mLastTapUpTime;
+        if (mLastTapUpTime != 0 && interval >= 0 && interval <= mDoubleTapTimeoutMs) {
+            if (DEBUG) Log.d(TAG, "Double tap: duration=" + duration + " interval=" + interval);
+            mLastTapUpTime = 0;
+            toggleScrollMode();
+            return;
+        }
+        if (DEBUG) Log.d(TAG, "Tap: duration=" + duration);
+        mLastTapUpTime = mContactLastTime;
+    }
+
+    private void toggleScrollMode() {
+        performHaptic();
+        if (mState == STATE_COMPLETE) {
+            mHandler.removeCallbacks(mScrollModeTimeoutRunnable);
+            setState(STATE_INIT);
+            Log.i(TAG, "Scroll mode disabled");
+            Toast.makeText(this, mResources.getString(R.string.exlider_disabled_message),
+                    Toast.LENGTH_SHORT).show();
+        } else {
+            setState(STATE_COMPLETE);
+            Log.i(TAG, "Scroll mode enabled");
+            Toast.makeText(this, mResources.getString(R.string.exlider_enabled_message),
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private final Runnable mScrollModeTimeoutRunnable = () -> {
         if (mState == STATE_COMPLETE && !mTouched) {
             Log.i(TAG, "Scroll mode disabled by timeout");
@@ -501,6 +592,7 @@ public class ExliderService extends AccessibilityService {
         mHandler.removeCallbacks(mContactLostRunnable);
         mTouched = false;
         mContactPrepared = false;
+        mLastTapUpTime = 0;
         stopScrolling();
         clearGear();
         setState(STATE_INIT);
@@ -514,6 +606,18 @@ public class ExliderService extends AccessibilityService {
 
     private void processScrollModeEvent(long eventTime, int delta) {
         final int gear = updateGear(eventTime, delta);
+        if (gear != 0) mContactMoved = true;
+
+        if (isDoubleTapToggle()) {
+            // The scroll mode is toggled by a double tap only (see onContactEnded()).
+            if (mState != STATE_COMPLETE) return;
+            if (gear == 0) {
+                stopScrolling();
+            } else {
+                startScrolling(gear);
+            }
+            return;
+        }
 
         if (mState == STATE_INIT) {
             if (gear != 0) {
@@ -784,6 +888,10 @@ public class ExliderService extends AccessibilityService {
         mGearThreshChange = mResources.getInteger(R.integer.config_exliderGearThresholdChange);
         mGearThreshIdle = mResources.getInteger(R.integer.config_exliderGearThresholdIdle);
         mInvertDirection = mResources.getBoolean(R.bool.config_exliderInvertDirection);
+        mTapTimeoutMs = mResources.getInteger(R.integer.config_exliderTapTimeout);
+        mDoubleTapTimeoutMs = mResources.getInteger(R.integer.config_exliderDoubleTapTimeout);
+        mTapLiftGapMs = mResources.getInteger(R.integer.config_exliderTapLiftGap);
+        mTapSlop = mResources.getInteger(R.integer.config_exliderTapSlop);
         mGearThresh = mGearThreshStart;
     }
 
@@ -792,6 +900,15 @@ public class ExliderService extends AccessibilityService {
                 mContentResolver, Constants.KEY_EXLIDER_SCROLL_SPEED, DEFAULT_SCROLL_SPEED);
         if (!Float.isFinite(speed)) speed = DEFAULT_SCROLL_SPEED;
         mScrollSpeed = Math.max(MIN_SCROLL_SPEED, Math.min(MAX_SCROLL_SPEED, speed));
+
+        final int gesture = Settings.Secure.getInt(mContentResolver,
+                Constants.KEY_EXLIDER_TOGGLE_GESTURE, TOGGLE_DOUBLE_TAP);
+        if (gesture != mToggleGesture) {
+            mToggleGesture = gesture;
+            // Drop a half-finished gesture of the other kind.
+            mLastTapUpTime = 0;
+            if (mState != STATE_COMPLETE) setState(STATE_INIT);
+        }
 
         try {
             mWheelAccelerationEnabled = InputSettings.isMouseScrollingAccelerationEnabled(this);
@@ -807,7 +924,8 @@ public class ExliderService extends AccessibilityService {
             mWheelBaseScale = 1f;
             mWheelReverseVertical = false;
         }
-        Log.d(TAG, "Scroll speed: " + mScrollSpeed + ", wheel acceleration: "
+        Log.d(TAG, "Toggle gesture: " + mToggleGesture + ", scroll speed: " + mScrollSpeed
+                + ", wheel acceleration: "
                 + mWheelAccelerationEnabled + ", wheel scale: " + mWheelBaseScale
                 + ", reverse: " + mWheelReverseVertical);
     }

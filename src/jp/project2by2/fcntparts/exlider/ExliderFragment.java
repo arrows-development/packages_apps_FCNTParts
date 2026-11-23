@@ -16,6 +16,7 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
@@ -36,6 +37,7 @@ public class ExliderFragment extends PreferenceFragmentCompat
             "jp.project2by2.fcntparts.exlider.ExliderService");
 
     private MainSwitchPreference mExliderEnableSwitch;
+    private ListPreference mToggleGesturePreference;
     private ExliderSpeedPreference mScrollSpeedPreference;
     private ContentResolver mContentResolver;
     private boolean mObserverRegistered;
@@ -62,6 +64,12 @@ public class ExliderFragment extends PreferenceFragmentCompat
         // The system accessibility setting is the single source of truth.
         mExliderEnableSwitch.setPersistent(false);
         mExliderEnableSwitch.setOnPreferenceChangeListener(this);
+
+        mToggleGesturePreference = (ListPreference)
+                findPreference(Constants.KEY_EXLIDER_TOGGLE_GESTURE);
+        mToggleGesturePreference.setOnPreferenceChangeListener(this);
+        mToggleGesturePreference.setValue(Integer.toString(Settings.Secure.getInt(
+                mContentResolver, Constants.KEY_EXLIDER_TOGGLE_GESTURE, 0)));
 
         mScrollSpeedPreference = (ExliderSpeedPreference)
                 findPreference(Constants.KEY_EXLIDER_SCROLL_SPEED);
@@ -110,6 +118,10 @@ public class ExliderFragment extends PreferenceFragmentCompat
             boolean changed = setExliderAccessibilityEnabled(enabled);
             if (!changed) syncAccessibilitySwitch();
             return changed;
+        }
+        if (preference == mToggleGesturePreference) {
+            return Settings.Secure.putInt(mContentResolver, preference.getKey(),
+                    Integer.parseInt((String) newValue));
         }
         if (preference == mScrollSpeedPreference) {
             float speed = ((Integer) newValue) / 10.0f;

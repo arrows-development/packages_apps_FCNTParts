@@ -24,6 +24,19 @@
     <integer name="config_exliderGearThresholdChange">15</integer>
     <integer name="config_exliderGearThresholdIdle">12</integer>
 
+    <!-- Exlider: a contact is a tap when it is released within this time (ms)
+         without sliding more than config_exliderTapSlop (raw HAL units). -->
+    <integer name="config_exliderTapTimeout">300</integer>
+    <integer name="config_exliderTapSlop">30</integer>
+
+    <!-- Exlider: maximum time (ms) between the release of the first tap and the
+         touch of the second tap of a double tap. -->
+    <integer name="config_exliderDoubleTapTimeout">400</integer>
+
+    <!-- Exlider: without a finger-up key, the finger is considered lifted when the
+         HAL reports no frame for this long (ms) in double tap mode. -->
+    <integer name="config_exliderTapLiftGap">100</integer>
+
     <!-- Exlider: invert the slide direction reported by the HAL. -->
     <bool name="config_exliderInvertDirection">false</bool>
 </resources>

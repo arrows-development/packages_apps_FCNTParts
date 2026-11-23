@@ -13,6 +13,16 @@
         android:persistent="false"
         android:defaultValue="false" />
 
+    <ListPreference
+        android:key="exlider_toggle_gesture"
+        android:title="@string/exlider_toggle_gesture_title"
+        android:dialogTitle="@string/exlider_toggle_gesture_title"
+        android:entries="@array/exlider_toggle_gesture_entries"
+        android:entryValues="@array/exlider_toggle_gesture_values"
+        android:persistent="false"
+        android:defaultValue="0"
+        settings:useSimpleSummaryProvider="true" />
+
     <jp.project2by2.fcntparts.exlider.ExliderSpeedPreference
         android:key="exlider_scroll_speed"
         android:title="@string/exlider_scroll_speed_title"

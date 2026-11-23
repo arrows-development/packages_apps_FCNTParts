@@ -34,10 +34,13 @@
     <!-- Exlider -->
     <string name="exlider_title">Exlider</string>
     <string name="exlider_summary">Use fingerprint sensor for scroll gestures</string>
-    <string name="exlider_summary_2">- Put finger to fingerprint sensor, hold to turn on scroll mode.\n- On scroll mode, you can scroll it sliding finger on sensor.\n- If you have any issues about display, please turn off exlider.</string>
+    <string name="exlider_summary_2">- Double tap the fingerprint sensor (or hold your finger on it, depending on the setting) to turn scroll mode on or off.\n- On scroll mode, you can scroll it sliding finger on sensor.\n- If you have any issues about display, please turn off exlider.</string>
     <string name="exlider_main_switch_title">Use Exlider</string>
     <string name="exlider_scroll_speed_title">Scroll speed</string>
     <string name="exlider_scroll_speed_summary">Adjust exlider scroll speed</string>
+    <string name="exlider_toggle_gesture_title">Scroll mode toggle</string>
+    <string name="exlider_toggle_gesture_double_tap">Double tap</string>
+    <string name="exlider_toggle_gesture_long_tap">Touch and hold</string>
     <string name="exlider_enabled_message">Exlider Scroll Mode</string>
     <string name="exlider_disabled_message">Exlider turned off</string>
     <string name="exlider_fingerprint_extension_error">Cannot initialize fingerprint sensor extension</string>

@@ -33,10 +33,13 @@
     <!-- Exlider -->
     <string name="exlider_title">Exlider</string>
     <string name="exlider_summary">指紋認証センサーを使用して画面をスクロールします</string>
-    <string name="exlider_summary_2">・指紋認証センサーに指を置いたまま1秒ほど待つとスクロールモードのオン・オフを切り替えます。\n・スクロールモードの状態で、指紋認証センサーを上下にスライドすることで画面がスクロールします。\n・画面が誤作動するときはオフにしてください。</string>
+    <string name="exlider_summary_2">・指紋認証センサーをダブルタップする（設定によっては指を置いたまま1秒ほど待つ）とスクロールモードのオン・オフを切り替えます。\n・スクロールモードの状態で、指紋認証センサーを上下にスライドすることで画面がスクロールします。\n・画面が誤作動するときはオフにしてください。</string>
     <string name="exlider_main_switch_title">Exlider を使用</string>
     <string name="exlider_scroll_speed_title">スクロール速度</string>
     <string name="exlider_scroll_speed_summary">画面のスクロール速度を調整します</string>
+    <string name="exlider_toggle_gesture_title">スクロールモードの切り替え</string>
+    <string name="exlider_toggle_gesture_double_tap">ダブルタップ</string>
+    <string name="exlider_toggle_gesture_long_tap">長押し</string>
     <string name="exlider_enabled_message">Exlider スクロールモード</string>
     <string name="exlider_disabled_message">Exlider をオフにしました</string>
     <string name="exlider_fingerprint_extension_error">指紋センサー拡張機能を初期化できません</string>
