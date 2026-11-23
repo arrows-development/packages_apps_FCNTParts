@@ -22,6 +22,7 @@ allow fcntparts_app {
   surfaceflinger_service
   thermal_service
   trust_service
+  vibrator_manager_service
   voiceinteraction_service
 }:service_manager find;
 
